@@ -72,6 +72,54 @@ npm run list      # muestra el último estado conocido
 npm run watch     # comprueba en bucle cada INTERVAL_MINUTES
 ```
 
+## Modo daemon (segundo plano)
+
+Para que vigile solo, sin tener una terminal abierta, hay dos opciones con
+**systemd** (Linux). Requisito previo: haber ejecutado `npm run login` y tener
+al menos una cuenta con `npm run add`.
+
+### Opción A — servicio continuo (`watch`)
+
+Un proceso que corre siempre y comprueba cada `INTERVAL_MINUTES`:
+
+```bash
+npm run daemon:install        # instala y arranca el servicio de usuario
+journalctl --user -u tiktok-block-monitor -f   # ver logs en vivo
+```
+
+### Opción B — timer periódico (recomendada)
+
+systemd lanza una comprobación puntual cada 30 min (sin proceso permanente):
+
+```bash
+npm run daemon:timer
+systemctl --user list-timers tiktok-block-monitor-check   # próxima ejecución
+```
+
+Para cambiar la frecuencia, edita `OnUnitActiveSec` en
+`deploy/tiktok-block-monitor-check.timer` y reinstala.
+
+### Desinstalar
+
+```bash
+npm run daemon:uninstall
+```
+
+> Los servicios se instalan como **servicios de usuario** (`systemctl --user`),
+> así pueden leer tu sesión guardada (`storage-state.json`). El script intenta
+> activar *linger* para que sigan corriendo aunque cierres sesión; si pide
+> permisos, ejecuta `sudo loginctl enable-linger $USER`.
+
+### Alternativa: cron
+
+Si prefieres cron en vez de systemd, añade a tu crontab (`crontab -e`):
+
+```cron
+*/30 * * * * cd /ruta/a/tiktok-block-monitor && /usr/bin/node src/index.js check >> data/daemon.log 2>&1
+```
+
+Los logs del daemon se guardan en `data/daemon.log`.
+
 ## Notificaciones
 
 Si rellenas `NOTIFY_WEBHOOK_URL` en `.env` con un webhook de Discord o Slack,
@@ -100,7 +148,8 @@ tiktok-block-monitor/
 │   ├── targets.js   Gestión de la lista de cuentas
 │   ├── notify.js    Notificaciones (consola + webhook)
 │   └── config.js    Carga de configuración y .env
-└── data/            Estado guardado (generado, ignorado por git)
+├── deploy/          Unidades systemd + script de instalación del daemon
+└── data/            Estado y logs (generado, ignorado por git)
 ```
 
 ## Aviso legal

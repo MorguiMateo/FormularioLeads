@@ -9,65 +9,103 @@ import { getTargets, addTarget, removeTarget } from './targets.js';
 const command = process.argv[2] || 'check';
 const arg = process.argv[3];
 
+// Marca temporal corta para los logs del daemon.
+function ts() {
+  return new Date().toISOString().replace('T', ' ').slice(0, 19);
+}
+
+/**
+ * Ejecuta una ronda de comprobaciones.
+ * Devuelve: 'ok' | 'no-session' | 'no-targets' | 'session-expired'.
+ * Nunca llama a process.exit, para poder reutilizarse en el modo daemon.
+ */
 async function runCheck() {
   if (!fs.existsSync(STORAGE_STATE)) {
     console.error(
-      '\n⚠️  No hay sesión guardada. Ejecuta primero:  npm run login\n'
+      `[${ts()}] ⚠️  No hay sesión guardada. Ejecuta primero:  npm run login`
     );
-    process.exit(1);
+    return 'no-session';
   }
 
   const targets = getTargets();
   if (targets.length === 0) {
     console.error(
-      '\n⚠️  No hay usuarios que vigilar. Añade alguno con:\n' +
-        '   npm run add -- usuario\n' +
-        '   (o define TARGETS en el archivo .env)\n'
+      `[${ts()}] ⚠️  No hay cuentas que vigilar. Añade alguna con:  npm run add -- usuario`
     );
-    process.exit(1);
+    return 'no-targets';
   }
 
   // Importación diferida: solo cargamos Playwright cuando hace falta navegar.
   const { checkUser } = await import('./scraper.js');
 
-  console.log(`\nComprobando ${targets.length} cuenta(s)...\n`);
+  console.log(`[${ts()}] Comprobando ${targets.length} cuenta(s)...`);
   const state = loadState();
+  let outcome = 'ok';
 
   for (const username of targets) {
-    process.stdout.write(`• @${username} ... `);
     try {
       const result = await checkUser(username);
-      console.log(STATUS_LABEL[result.status] ?? result.status);
+      console.log(
+        `[${ts()}] • @${username} — ${STATUS_LABEL[result.status] ?? result.status}`
+      );
 
       const transition = recordResult(state, result);
       if (transition) await notifyTransition(username, transition);
 
       if (result.status === 'session-expired') {
         console.error(
-          '\n⚠️  Tu sesión ha caducado. Ejecuta:  npm run login\n'
+          `[${ts()}] ⚠️  Tu sesión ha caducado. Ejecuta:  npm run login`
         );
+        outcome = 'session-expired';
         break;
       }
     } catch (err) {
-      console.log(`error: ${err.message}`);
+      console.log(`[${ts()}] • @${username} — error: ${err.message}`);
     }
   }
 
   saveState(state);
-  console.log('\nListo. Estado guardado en data/state.json\n');
+  return outcome;
 }
 
 async function runWatch() {
   const minutes = config.intervalMinutes;
   console.log(
-    `\nModo vigilancia: comprobando cada ${minutes} minuto(s). Ctrl+C para salir.\n`
+    `[${ts()}] Modo vigilancia activo: comprobando cada ${minutes} minuto(s). Ctrl+C para salir.`
   );
-  // Bucle infinito con espera entre rondas.
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    await runCheck();
-    await sleep(minutes * 60 * 1000);
+
+  let stopping = false;
+  let wakeUp = null; // resuelve la espera entre rondas antes de tiempo
+  const stop = (signal) => {
+    console.log(`\n[${ts()}] Recibido ${signal}, deteniendo vigilancia...`);
+    stopping = true;
+    if (wakeUp) wakeUp();
+  };
+  process.on('SIGINT', () => stop('SIGINT'));
+  process.on('SIGTERM', () => stop('SIGTERM'));
+
+  // Espera interrumpible: se resuelve al pasar el tiempo o al pedir parada.
+  const waitInterruptible = (ms) =>
+    new Promise((resolve) => {
+      const timer = setTimeout(resolve, ms);
+      wakeUp = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    });
+
+  // Bucle resiliente: un fallo en una ronda no detiene el daemon.
+  while (!stopping) {
+    try {
+      await runCheck();
+    } catch (err) {
+      console.error(`[${ts()}] Error inesperado en la ronda: ${err.message}`);
+    }
+    if (stopping) break;
+    await waitInterruptible(minutes * 60 * 1000);
   }
+  console.log(`[${ts()}] Vigilancia detenida.`);
+  process.exit(0);
 }
 
 function runList() {
@@ -87,10 +125,6 @@ function runList() {
   console.log('');
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function printHelp() {
   console.log(`
 tiktok-block-monitor — detecta si una cuenta de TikTok te bloqueó/desbloqueó
@@ -102,14 +136,23 @@ Uso:
   npm run list               Muestra el último estado conocido
   npm run add -- <usuario>   Añade una cuenta a vigilar
   npm run remove -- <usuario>  Deja de vigilar una cuenta
+
+Daemon (segundo plano, systemd):
+  npm run daemon:install     Servicio continuo (watch)
+  npm run daemon:timer       Comprobación periódica con timer
+  npm run daemon:uninstall   Desinstala el daemon
 `);
 }
 
 async function main() {
   switch (command) {
-    case 'check':
-      await runCheck();
+    case 'check': {
+      const outcome = await runCheck();
+      if (outcome === 'no-session' || outcome === 'no-targets') {
+        process.exit(1);
+      }
       break;
+    }
     case 'watch':
       await runWatch();
       break;

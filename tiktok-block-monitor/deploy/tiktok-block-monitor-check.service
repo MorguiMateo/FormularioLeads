@@ -1,0 +1,13 @@
+[Unit]
+Description=TikTok Block Monitor (comprobación puntual, lanzada por timer)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=__DIR__
+ExecStart=__NODE__ __DIR__/src/index.js check
+StandardOutput=append:__DIR__/data/daemon.log
+StandardError=append:__DIR__/data/daemon.log
+Environment=NODE_ENV=production

@@ -13,7 +13,10 @@
     "watch": "node src/index.js watch",
     "list": "node src/index.js list",
     "add": "node src/index.js add",
-    "remove": "node src/index.js remove"
+    "remove": "node src/index.js remove",
+    "daemon:install": "bash deploy/install-systemd.sh watch",
+    "daemon:timer": "bash deploy/install-systemd.sh timer",
+    "daemon:uninstall": "bash deploy/install-systemd.sh uninstall"
   },
   "engines": {
     "node": ">=18"

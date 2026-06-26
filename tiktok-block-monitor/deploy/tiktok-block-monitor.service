@@ -1,0 +1,21 @@
+[Unit]
+Description=TikTok Block Monitor (vigilancia continua)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# __USER__, __DIR__ y __NODE__ los rellena install-systemd.sh
+User=__USER__
+WorkingDirectory=__DIR__
+ExecStart=__NODE__ __DIR__/src/index.js watch
+Restart=on-failure
+RestartSec=30
+# Reinicia también si el proceso sale limpio (p. ej. tras un SIGTERM externo)
+# pero respeta los reinicios manuales con `systemctl stop`.
+StandardOutput=append:__DIR__/data/daemon.log
+StandardError=append:__DIR__/data/daemon.log
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
