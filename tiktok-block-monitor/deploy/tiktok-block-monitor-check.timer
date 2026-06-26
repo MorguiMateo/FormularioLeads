@@ -1,11 +1,13 @@
 [Unit]
-Description=Lanza la comprobación de bloqueos de TikTok periódicamente
+Description=Lanza la comprobación de bloqueos de TikTok dentro de las franjas
 
 [Timer]
-# Primera ejecución 2 min después de arrancar el sistema.
-OnBootSec=2min
-# Y después cada 30 min (ajústalo a tu gusto).
-OnUnitActiveSec=30min
+# Solo dispara dentro de las franjas 08-12 y 18-24 (hora local), a unas pocas
+# horas base. El modo `watch` da una aleatoriedad más fina; este timer es la
+# alternativa "sin proceso permanente".
+OnCalendar=*-*-* 09,11,19,21,23:00:00
+# Desfase aleatorio de hasta 45 min para no ejecutar en el minuto exacto.
+RandomizedDelaySec=2700
 # Si el equipo estuvo apagado a la hora prevista, ejecuta al encender.
 Persistent=true
 Unit=tiktok-block-monitor-check.service

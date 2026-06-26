@@ -69,8 +69,31 @@ También puedes definirlas en `.env` con `TARGETS=usuario1,usuario2`.
 ```bash
 npm run check     # una comprobación
 npm run list      # muestra el último estado conocido
-npm run watch     # comprueba en bucle cada INTERVAL_MINUTES
+npm run watch     # vigila dentro de las franjas horarias (recomendado)
 ```
+
+## Anti-detección (importante)
+
+TikTok detecta el scraping sobre todo por **patrones**: timing uniforme,
+ráfagas de peticiones, captchas ignorados e IPs de datacenter. El modo `watch`
+incorpora varias defensas para pasar desapercibido:
+
+- **Franjas horarias** (`CHECK_WINDOWS`): solo comprueba dentro de las horas que
+  definas (por defecto `08:00-12:00` y `18:00-24:00`).
+- **Timing aleatorio**: cada comprobación cae a una hora distinta dentro de la
+  franja, con huecos de `MIN_GAP_MINUTES`–`MAX_GAP_MINUTES` (nada de intervalos
+  fijos, que son la mayor delación).
+- **Tope diario** (`DAILY_MAX`): nunca supera N comprobaciones al día.
+- **Retardo aleatorio entre cuentas** (`ACCOUNT_DELAY_*`): evita ráfagas.
+- **Circuit breaker**: si detecta un **429 o captcha**, se pausa
+  `BACKOFF_HOURS_MIN`–`BACKOFF_HOURS_MAX` horas automáticamente.
+- **Comportamiento humano** (`HUMANIZE`): esperas variables, scroll y ratón.
+
+Recomendaciones operativas que **no** dependen del código:
+
+1. Ejecútalo desde **tu IP de casa** (residencial), nunca desde un VPS/datacenter.
+2. Usa `HEADLESS=false` para reducir la huella de navegador automatizado.
+3. Vigila **pocas cuentas** (< ~15); cada cuenta son 2 cargas de página.
 
 ## Modo daemon (segundo plano)
 
@@ -78,25 +101,28 @@ Para que vigile solo, sin tener una terminal abierta, hay dos opciones con
 **systemd** (Linux). Requisito previo: haber ejecutado `npm run login` y tener
 al menos una cuenta con `npm run add`.
 
-### Opción A — servicio continuo (`watch`)
+### Opción A — servicio continuo (`watch`, **recomendada**)
 
-Un proceso que corre siempre y comprueba cada `INTERVAL_MINUTES`:
+Un proceso que respeta las franjas, el timing aleatorio, el tope diario y el
+backoff (toda la lógica anti-detección):
 
 ```bash
 npm run daemon:install        # instala y arranca el servicio de usuario
 journalctl --user -u tiktok-block-monitor -f   # ver logs en vivo
 ```
 
-### Opción B — timer periódico (recomendada)
+### Opción B — timer periódico
 
-systemd lanza una comprobación puntual cada 30 min (sin proceso permanente):
+systemd lanza comprobaciones puntuales solo en las horas de las franjas, con un
+desfase aleatorio (no hay proceso permanente, pero la aleatoriedad es más
+gruesa y **no aplica el tope diario ni el backoff**, que son del modo `watch`):
 
 ```bash
 npm run daemon:timer
 systemctl --user list-timers tiktok-block-monitor-check   # próxima ejecución
 ```
 
-Para cambiar la frecuencia, edita `OnUnitActiveSec` en
+Para ajustar las horas, edita `OnCalendar` en
 `deploy/tiktok-block-monitor-check.timer` y reinstala.
 
 ### Desinstalar
@@ -131,7 +157,12 @@ recibirás un mensaje cada vez que alguien te bloquee o te desbloquee.
 |----------|-------------|-------------|
 | `TARGETS` | Usuarios a vigilar, separados por comas | (vacío) |
 | `HEADLESS` | `true` ejecuta sin ventana; `false` la muestra | `true` |
-| `INTERVAL_MINUTES` | Intervalo del modo `watch` | `30` |
+| `CHECK_WINDOWS` | Franjas horarias permitidas (hora local; 24:00 = medianoche) | `08:00-12:00,18:00-24:00` |
+| `MIN_GAP_MINUTES` / `MAX_GAP_MINUTES` | Hueco aleatorio entre comprobaciones | `60` / `150` |
+| `DAILY_MAX` | Tope de comprobaciones por día | `8` |
+| `ACCOUNT_DELAY_MIN_SECONDS` / `ACCOUNT_DELAY_MAX_SECONDS` | Retardo aleatorio entre cuentas | `20` / `60` |
+| `BACKOFF_HOURS_MIN` / `BACKOFF_HOURS_MAX` | Pausa al detectar 429/captcha | `6` / `12` |
+| `HUMANIZE` | Simular comportamiento humano | `true` |
 | `NOTIFY_WEBHOOK_URL` | Webhook para notificaciones | (vacío) |
 | `USER_AGENT` | User-Agent del navegador | Chrome de escritorio |
 
@@ -143,7 +174,8 @@ tiktok-block-monitor/
 │   ├── index.js     CLI (check, watch, list, add, remove)
 │   ├── login.js     Guarda tu sesión de TikTok
 │   ├── browser.js   Lanza Chromium (con y sin sesión)
-│   ├── scraper.js   Detección de estado por método comparativo
+│   ├── scraper.js   Detección de estado + humanización + 429/captcha
+│   ├── scheduler.js Franjas horarias y timing aleatorio
 │   ├── store.js     Persistencia del estado e historial
 │   ├── targets.js   Gestión de la lista de cuentas
 │   ├── notify.js    Notificaciones (consola + webhook)

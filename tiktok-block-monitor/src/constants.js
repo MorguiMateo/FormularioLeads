@@ -3,5 +3,6 @@ export const STATUS_LABEL = {
   visible: 'visible (no estás bloqueado)',
   unavailable: 'cuenta no disponible (borrada/suspendida)',
   'session-expired': 'sesión caducada — vuelve a ejecutar npm run login',
+  'rate-limited': 'LIMITADO por TikTok (429/captcha) — pausando',
   unknown: 'no determinado',
 };
