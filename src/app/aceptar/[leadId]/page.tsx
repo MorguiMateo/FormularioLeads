@@ -1,8 +1,15 @@
-import {Suspense} from "react";
-
 import AceptarPropuesta from "./aceptar-propuesta";
 
-export default function AceptarPage() {
+export default async function AceptarPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{leadId: string}>;
+  searchParams: Promise<{token?: string}>;
+}) {
+  const {leadId} = await params;
+  const {token} = await searchParams;
+
   return (
     <main className="mx-auto w-full max-w-2xl px-6 pb-20 pt-6">
       <div className="mb-14 border-b border-neutral-800 pb-12 text-center">
@@ -14,15 +21,7 @@ export default function AceptarPage() {
         </h1>
       </div>
 
-      <Suspense
-        fallback={
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
-            Cargando…
-          </span>
-        }
-      >
-        <AceptarPropuesta />
-      </Suspense>
+      <AceptarPropuesta leadId={leadId} token={token ?? ""} />
     </main>
   );
 }
