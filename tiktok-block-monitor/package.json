@@ -1,0 +1,24 @@
+{
+  "name": "tiktok-block-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monitorea perfiles de TikTok para detectar si una cuenta te bloqueó o desbloqueó.",
+  "type": "module",
+  "bin": {
+    "tiktok-block-monitor": "src/index.js"
+  },
+  "scripts": {
+    "login": "node src/login.js",
+    "check": "node src/index.js check",
+    "watch": "node src/index.js watch",
+    "list": "node src/index.js list",
+    "add": "node src/index.js add",
+    "remove": "node src/index.js remove"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
