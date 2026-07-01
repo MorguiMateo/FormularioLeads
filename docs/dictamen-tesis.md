@@ -100,7 +100,7 @@ Se clonaron ambos repositorios y se contrastó, afirmación por afirmación, el 
 Organización IMRyD-adaptada correcta. *Observación de alta gravedad formal:* índice no generado, sin paginación y figuras ausentes (Anexo A). *v3:* la coherencia documento–artefacto del frontend queda saldada; resta unificar el repositorio de referencia.
 
 **2. Planteamiento del problema — Adecuado.**
-Distingue tema, problema y pregunta (§1.3). *Debilidad:* la premisa (*"crecimiento sostenido"* del trabajo independiente, §1.1) se afirma sin fuente. *Verificación externa requerida.*
+Distingue tema, problema y pregunta (§1.3). *Debilidad resuelta (1/7/2026):* la premisa (*"crecimiento sostenido"* del trabajo independiente, §1.1) ahora cita Kässi y Lehdonvirta (2018, peer-reviewed) y OIT (2025, informe institucional).
 
 **3. Hipótesis — Adecuado (ausencia justificada).**
 Correcta la no formulación de hipótesis (§3.1). Sin penalización.
@@ -109,13 +109,13 @@ Correcta la no formulación de hipótesis (§3.1). Sin penalización.
 General y cinco específicos en infinitivo, alineados y trazables (Anexo E). *v3:* la trazabilidad se refuerza porque la validación declarada (incluido OE4 vía E7) **es ahora reproducible** en el artefacto.
 
 **5. Estado del arte / antecedentes — PARCIAL (1/7/2026).**
-Se incorporaron §2.7 (Antecedentes y estado del arte: HubSpot, Pipedrive, Zapier, Make, con el párrafo de cierre que establece el vacío) y §2.8 (Construir frente a configurar, con cuatro razones y trade-offs honestos) al final del Capítulo 2, más una frase-puente en §1.4 y cuatro referencias nuevas. Falta: reforzar con al menos una fuente arbitrada/peer-reviewed reciente (más allá de Järvinen y Taiminen, 2016, ya citada) sobre adopción o TCO de automatización de marketing/ventas.
+Se incorporaron §2.7 (Antecedentes y estado del arte: HubSpot, Pipedrive, Zapier, Make, con el párrafo de cierre que establece el vacío) y §2.8 (Construir frente a configurar, con cuatro razones y trade-offs honestos) al final del Capítulo 2, más una frase-puente en §1.4 y cuatro referencias nuevas. *Avance (1/7/2026):* al fundamentar §1.1 se sumó Kässi y Lehdonvirta (2018), una **segunda fuente peer-reviewed** (Technological Forecasting and Social Change), lo que reduce parcialmente el pedido de este ítem aunque no sea específica de adopción/TCO de automatización de marketing. Falta: reforzar con al menos una fuente arbitrada/peer-reviewed reciente específica sobre adopción o TCO de automatización de marketing/ventas.
 
 **6. Marco teórico — Adecuado.**
 Pertinente, con definiciones operativas. *Observación de precisión:* Fielding (2000) se cita para definir el webhook (§2.1); esa tesis fundamenta REST, no el webhook. Atribución imprecisa.
 
 **7. Metodología / propuesta de desarrollo — Adecuado (reserva de reproducibilidad levantada para el frontend).**
-Enfoque iterativo-incremental, RF (Tabla 1), RNF con ISO/IEC 25010 (Tabla 2), herramientas (Tabla 3) y validación por escenarios (§3.7). *v3:* las decisiones de diseño que el §4.7 destaca —"tres clientes" y "tiempo real por suscripción"— **están implementadas en el repositorio** (`lib/supabase/*`, `dashboard-client.tsx`), lo que valida la propuesta de desarrollo. *Debilidad persistente:* relevamiento (§3.3) endeble, sin usuarios reales.
+Enfoque iterativo-incremental, RF (Tabla 1), RNF con ISO/IEC 25010 (Tabla 2), herramientas (Tabla 3) y validación por escenarios (§3.7). *v3:* las decisiones de diseño que el §4.7 destaca —"tres clientes" y "tiempo real por suscripción"— **están implementadas en el repositorio** (`lib/supabase/*`, `dashboard-client.tsx`), lo que valida la propuesta de desarrollo. *Debilidad resuelta con honestidad metodológica (1/7/2026):* §3.3 ya no describe el relevamiento como si incluyera usuarios; nombra la técnica real (análisis documental, anclado en fuentes) y declara explícitamente la ausencia de relevamiento primario como limitación, con línea de trabajo futuro asociada (Capítulo 8, ítem 7).
 
 **8. Resultados / validación — Insuficiente (mejora respecto de v2).**
 El escenario E7 **es ahora reproducible** en el código, lo que corrige la falsedad detectada en v2. Sin embargo, la debilidad de fondo persiste **en el documento**: la Tabla 9 fusiona *"Resultado esperado y observado"* en una columna, y el cierre *"En todos los casos el comportamiento observado coincidió con el esperado"* (§5) es autorreporte **sin evidencia** (capturas ausentes). El artefacto respalda los escenarios, pero el capítulo no lo demuestra.
@@ -130,7 +130,7 @@ Responden punto por punto a los OE (§7) y distinguen lo demostrado de lo sugeri
 Seis líneas priorizadas y ancladas en limitaciones reales. *v3:* el ítem 5 (pruebas) está parcialmente resuelto (`smoke_code_nodes.js`); conviene reflejarlo.
 
 **12. Bibliografía y citación — Adecuado.**
-APA consistente, sin huérfanos evidentes. *Debilidades:* baja proporción de literatura arbitrada reciente (un solo artículo peer-reviewed, Järvinen & Taiminen, 2016) y la atribución imprecisa a Fielding.
+APA consistente, sin huérfanos evidentes. *Debilidades:* baja proporción de literatura arbitrada reciente —*mejorado (1/7/2026)*: ahora son **dos** artículos peer-reviewed (Järvinen & Taiminen, 2016; Kässi & Lehdonvirta, 2018)— y la atribución imprecisa a Fielding.
 
 **13. Originalidad e integridad académica — Adecuado.**
 Sin indicios de plagio ni saltos de registro. *v3:* el problema de integridad de la evidencia señalado en v2 **queda esencialmente resuelto**: el frontend descrito existe y coincide con el documento; resta unificar el repositorio de referencia. Se mantiene la recomendación de control antiplagio y de detección de IA como práctica estándar.
@@ -140,12 +140,12 @@ Sin indicios de plagio ni saltos de registro. *v3:* el problema de integridad de
 | # | Dimensión | Nivel | Gravedad de las observaciones |
 |---|---|---|---|
 | 1 | Estructura y formato | Adecuado | **Alta** (índice, paginación, figuras) |
-| 2 | Planteamiento del problema | Adecuado | Media (premisa sin fuente) |
+| 2 | Planteamiento del problema | Adecuado | ~~Media (premisa sin fuente)~~ → Resuelta (1/7/2026) |
 | 3 | Hipótesis | Adecuado (N/A justificada) | Baja |
 | 4 | Objetivos | **Excelente** | Baja |
 | 5 | Estado del arte / antecedentes | Parcial (§2.7/§2.8 incorporadas 1/7/2026; falta fuente arbitrada adicional) | Media |
 | 6 | Marco teórico | Adecuado | Media (atribución a Fielding) |
-| 7 | Metodología / desarrollo | Adecuado | Media (relevamiento; reproducibilidad frontend OK) |
+| 7 | Metodología / desarrollo | Adecuado | ~~Media (relevamiento sin usuarios)~~ → Reencuadrado con honestidad (1/7/2026); reproducibilidad frontend OK |
 | 8 | Resultados / validación | **Insuficiente** | **Alta** (evidencia ausente del documento) |
 | 9 | Discusión | Adecuado | Baja |
 | 10 | Conclusiones | Adecuado | Baja |
@@ -161,7 +161,7 @@ Sin indicios de plagio ni saltos de registro. *v3:* el problema de integridad de
 4. ~~**Agregar una sección de Antecedentes / Estado del arte**~~ **PARCIAL (1/7/2026):** §2.7 (HubSpot, Pipedrive, Zapier, Make + vacío) y §2.8 (**construir vs. configurar** justificado con cuatro razones y trade-offs) agregadas al Capítulo 2. **Acción restante:** sumar una fuente arbitrada/peer-reviewed adicional sobre adopción o TCO de automatización de marketing/ventas.
 5. ~~**Resolver las incoherencias frontend–documento**~~ **RESUELTO (1/7/2026):** se corrigió el frontend (que era el desalineado, no el documento) — `aceptar-propuesta.tsx` ahora hace POST con `{lead_id, token}` en el cuerpo (el workflow n8n ya esperaba eso: `Code - Validar Token` lee `body.lead_id`/`body.token`), y `lead-form.tsx` apunta a `/webhook/lead/nuevo` (producción) en vez de `/webhook-test/`.
 6. ~~**Corregir el conteo del modelo de datos**~~ **RESUELTO (1/7/2026):** §4.4 y la Tabla 6 ahora declaran **cinco** tablas (`leads`, `facturas`, `seguimientos`, `logs`, `profiles`) y los cuatro estados de `estado_pago` (`PENDIENTE`/`COBRADO`/`VENCIDA`/`ANULADA`), con sus transiciones descriptas en §4.8. **Pendiente aparte:** reportar `smoke_code_nodes.js` en el Capítulo 5 y ajustar el ítem 5 de Trabajos Futuros (no forma parte de esta corrección).
-7. **Fundamentar empíricamente el problema** (§1.1–1.2) con al menos una fuente, y reforzar el relevamiento (§3.3).
+7. ~~**Fundamentar empíricamente el problema** (§1.1–1.2) con al menos una fuente, y reforzar el relevamiento (§3.3).~~ **RESUELTO (1/7/2026):** ver detalle en el checklist de correcciones (sección H, ítem "Mayores").
 8. **Correcciones formales:** declarar la norma APA, generar índice, paginación y corregir la atribución del webhook a Fielding (§2.1).
 9. **Control de integridad** (antiplagio + detección de IA) y **rotación de credenciales** de servicio (§8, ítem 6).
 
@@ -195,7 +195,7 @@ Orden: **bloqueantes** (condición para habilitar la defensa), **mayores** y **m
 - [x] **(v3)** **Método del webhook de aceptación y endpoint del formulario** — RESUELTO (1/7/2026): se corrigió el frontend (`aceptar-propuesta.tsx` a POST con `{lead_id, token}` en el cuerpo; `lead-form.tsx` a `/webhook/lead/nuevo` de producción), que era lo desalineado — Tabla 8 y el workflow n8n ya coincidían en POST/producción.
 - [x] **(v3)** **Conteo del modelo de datos y estados de factura** — RESUELTO (1/7/2026): §4.4 y Tabla 6 ahora declaran **cinco** tablas (se sumó `profiles` tras la publicación de RLS) incluyendo `logs`, con `estado_pago` documentado en sus cuatro valores (`PENDIENTE`/`COBRADO`/`VENCIDA`/`ANULADA`) y sus transiciones en §4.8.
 - [ ] **(v3)** Reportar en el Capítulo 5 la prueba existente `smoke_code_nodes.js` y reformular el ítem 5 de Trabajos Futuros.
-- [ ] Fundamentar la premisa del problema (§1.1–1.2) con fuente y reforzar el relevamiento (§3.3) con usuarios reales.
+- [x] Fundamentar la premisa del problema (§1.1–1.2) con fuente y reforzar el relevamiento (§3.3) con usuarios reales — **RESUELTO (1/7/2026):** §1.1 ahora cita Kässi y Lehdonvirta (2018, peer-reviewed, Online Labour Index) y OIT (2025, informe institucional) para la premisa del crecimiento del trabajo independiente. §3.3 fue reescrita con honestidad metodológica: nombra la técnica real (análisis documental), la ancla en esas mismas fuentes más Järvinen y Taiminen (2016), y **declara explícitamente** la ausencia de relevamiento primario con usuarios como limitación, con un ítem nuevo (7) en el Capítulo 8 (Trabajos Futuros) que la retoma. No se fabricaron datos de usuarios (decisión del usuario: no había acceso realista a una muestra real).
 - [ ] Añadir **métricas observadas** mínimas (latencia de la suscripción en tiempo real, tiempo de generación del PDF).
 
 ### Menores / formales
@@ -218,6 +218,7 @@ Orden: **bloqueantes** (condición para habilitar la defensa), **mayores** y **m
 - [ ] Índice, figuras, paginación y Tabla 9 (esperado/observado) presentes.
 - [ ] Sección de antecedentes incorporada.
 - [x] Incoherencias de webhook (método y endpoint) resueltas (1/7/2026).
+- [x] Premisa del problema (§1.1) fundamentada con fuente y relevamiento (§3.3) reencuadrado con honestidad (1/7/2026).
 - [ ] Preparadas las respuestas a las 6 cuestiones de la sección G.
 
 ---
