@@ -257,6 +257,37 @@ export default function DashboardClient() {
     }
   }
 
+  async function accionCambio(pathWebhook: string, leadId: string) {
+    if (!N8N_BASE) return;
+
+    try {
+      const res = await fetch(`${N8N_BASE}/webhook/${pathWebhook}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "ngrok-skip-browser-warning": "true"},
+        body: JSON.stringify({lead_id: leadId}),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      cargarDatos();
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo procesar el pedido de cambio.");
+    }
+  }
+
+  function aceptarCambio(leadId: string) {
+    if (window.confirm("¿Aceptar los cambios y reenviar la propuesta al cliente?")) {
+      accionCambio("cambio-aceptar", leadId);
+    }
+  }
+
+  function rechazarCambio(leadId: string) {
+    if (window.confirm("¿Rechazar los cambios? Se mantiene la propuesta original y se le avisa al cliente.")) {
+      accionCambio("cambio-rechazar", leadId);
+    }
+  }
+
   if (loading) {
     return (
       <p className="font-mono text-[11px] tracking-[0.2em] text-neutral-500 uppercase">
@@ -473,6 +504,22 @@ export default function DashboardClient() {
                   <span className="font-mono text-[11px] text-neutral-600">{p.lead_id}</span>
                 </div>
                 <p className="text-sm leading-relaxed text-neutral-400">{p.notas}</p>
+                <div className="mt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => aceptarCambio(p.lead_id)}
+                    className="bg-amber-400 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-950 transition hover:bg-amber-300"
+                  >
+                    Aceptar y reenviar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => rechazarCambio(p.lead_id)}
+                    className="border border-neutral-700 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.15em] text-neutral-400 transition hover:border-red-500 hover:text-red-400"
+                  >
+                    Rechazar
+                  </button>
+                </div>
               </div>
             ))}
           </div>
