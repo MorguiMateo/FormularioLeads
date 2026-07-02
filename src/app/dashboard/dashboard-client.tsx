@@ -6,6 +6,8 @@ import {createClient} from "@/lib/supabase/client";
 
 import TrabajoEstadoSelect from "./trabajo-estado-select";
 
+const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE;
+
 type LeadEstado =
   | "NUEVO"
   | "PROPUESTA_ENVIADA"
@@ -54,6 +56,13 @@ interface Trabajo {
   nombre: string;
   servicio: string;
   estado_trabajo: "PENDIENTE" | "EN_PROGRESO" | "EN_REVISION" | "ENTREGADO";
+}
+
+interface PedidoCambio {
+  lead_id: string;
+  nombre: string;
+  servicio: string;
+  notas: string | null;
 }
 
 const FUNNEL_ORDER: LeadEstado[] = [
@@ -150,6 +159,7 @@ export default function DashboardClient() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [facturas, setFacturas] = useState<FacturaPendiente[]>([]);
   const [trabajos, setTrabajos] = useState<Trabajo[]>([]);
+  const [pedidos, setPedidos] = useState<PedidoCambio[]>([]);
 
   const cargarDatos = useCallback(async () => {
     if (!supabase) {
@@ -162,7 +172,7 @@ export default function DashboardClient() {
     try {
       setError(null);
 
-      const [resMetrics, resEstados, resLeads, resFacturas, resTrabajos] = await Promise.all([
+      const [resMetrics, resEstados, resLeads, resFacturas, resTrabajos, resPedidos] = await Promise.all([
         supabase.from("metrics_mensuales").select("*").order("mes", {ascending: false}).limit(1),
         supabase.from("leads").select("estado"),
         supabase
@@ -176,10 +186,15 @@ export default function DashboardClient() {
           .select("lead_id,nombre,servicio,estado_trabajo")
           .in("estado", ["ACEPTADO", "FACTURADO"])
           .order("fecha_ingreso", {ascending: false}),
+        supabase
+          .from("leads")
+          .select("lead_id,nombre,servicio,notas")
+          .not("notas", "is", null)
+          .order("fecha_ingreso", {ascending: false}),
       ]);
 
       const fallo =
-        resMetrics.error ?? resEstados.error ?? resLeads.error ?? resFacturas.error ?? resTrabajos.error;
+        resMetrics.error ?? resEstados.error ?? resLeads.error ?? resFacturas.error ?? resTrabajos.error ?? resPedidos.error;
 
       if (fallo) throw fallo;
 
@@ -195,6 +210,7 @@ export default function DashboardClient() {
       setLeads((resLeads.data as Lead[] | null) ?? []);
       setFacturas((resFacturas.data as FacturaPendiente[] | null) ?? []);
       setTrabajos((resTrabajos.data as Trabajo[] | null) ?? []);
+      setPedidos((resPedidos.data as PedidoCambio[] | null) ?? []);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "No pudimos cargar el dashboard.");
@@ -220,6 +236,26 @@ export default function DashboardClient() {
       client.removeChannel(channel);
     };
   }, [cargarDatos, supabase]);
+
+  async function cancelar(leadId: string) {
+    if (!N8N_BASE) return;
+    if (!window.confirm("¿Cancelar este pedido? Se marca como PERDIDO y se avisa al cliente.")) return;
+
+    try {
+      const res = await fetch(`${N8N_BASE}/webhook/lead-cancelar`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "ngrok-skip-browser-warning": "true"},
+        body: JSON.stringify({lead_id: leadId}),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      cargarDatos();
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cancelar el pedido.");
+    }
+  }
 
   if (loading) {
     return (
@@ -392,7 +428,8 @@ export default function DashboardClient() {
                   <th className="py-3 pr-4 font-normal">Lead</th>
                   <th className="py-3 pr-4 font-normal">Cliente</th>
                   <th className="py-3 pr-4 font-normal">Servicio</th>
-                  <th className="py-3 font-normal">Estado del trabajo</th>
+                  <th className="py-3 pr-4 font-normal">Estado del trabajo</th>
+                  <th className="py-3 font-normal">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -401,13 +438,43 @@ export default function DashboardClient() {
                     <td className="py-3 pr-4 font-mono text-[12px] text-neutral-500">{t.lead_id}</td>
                     <td className="py-3 pr-4 text-neutral-100">{t.nombre}</td>
                     <td className="py-3 pr-4">{t.servicio?.replace(/_/g, " ")}</td>
-                    <td className="py-3">
+                    <td className="py-3 pr-4">
                       <TrabajoEstadoSelect inicial={t.estado_trabajo} leadId={t.lead_id} />
+                    </td>
+                    <td className="py-3">
+                      <button
+                        type="button"
+                        onClick={() => cancelar(t.lead_id)}
+                        className="border border-neutral-700 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-neutral-400 transition hover:border-red-500 hover:text-red-400"
+                      >
+                        Cancelar
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      {/* F — Pedidos de cambio */}
+      <section>
+        <SectionHeader num="F" title="Pedidos de cambio" />
+        {pedidos.length === 0 ? (
+          <p className="font-mono text-[12px] text-neutral-500">No hay pedidos de cambio.</p>
+        ) : (
+          <div className="flex flex-col gap-5">
+            {pedidos.map((p) => (
+              <div key={p.lead_id} className="border-l-2 border-amber-500 pl-4">
+                <div className="mb-1 flex flex-wrap items-center gap-3">
+                  <span className="text-neutral-100">{p.nombre}</span>
+                  <Tag className="text-neutral-500">{p.servicio?.replace(/_/g, " ")}</Tag>
+                  <span className="font-mono text-[11px] text-neutral-600">{p.lead_id}</span>
+                </div>
+                <p className="text-sm leading-relaxed text-neutral-400">{p.notas}</p>
+              </div>
+            ))}
           </div>
         )}
       </section>
