@@ -160,6 +160,8 @@ export default function DashboardClient() {
   const [facturas, setFacturas] = useState<FacturaPendiente[]>([]);
   const [trabajos, setTrabajos] = useState<Trabajo[]>([]);
   const [pedidos, setPedidos] = useState<PedidoCambio[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [pagina, setPagina] = useState(0);
 
   const cargarDatos = useCallback(async () => {
     if (!supabase) {
@@ -179,7 +181,7 @@ export default function DashboardClient() {
           .from("leads")
           .select("lead_id,nombre,email,servicio,estado,tier,presupuesto,fecha_ingreso")
           .order("fecha_ingreso", {ascending: false})
-          .limit(20),
+          .limit(200),
         supabase.from("facturas_pendientes").select("*").order("dias_al_vencimiento"),
         supabase
           .from("leads")
@@ -298,6 +300,15 @@ export default function DashboardClient() {
 
   const funnelMax = Math.max(1, ...FUNNEL_ORDER.map((estado) => funnel[estado] ?? 0));
 
+  const POR_PAGINA = 15;
+  const q = busqueda.toLowerCase().trim();
+  const leadsFiltrados = q
+    ? leads.filter((l) => l.nombre.toLowerCase().includes(q) || l.lead_id.toLowerCase().includes(q))
+    : leads;
+  const totalPaginas = Math.max(1, Math.ceil(leadsFiltrados.length / POR_PAGINA));
+  const pag = Math.min(pagina, totalPaginas - 1);
+  const leadsPagina = leadsFiltrados.slice(pag * POR_PAGINA, (pag + 1) * POR_PAGINA);
+
   return (
     <div className="flex flex-col gap-16">
       {error && (
@@ -345,49 +356,85 @@ export default function DashboardClient() {
       {/* C — Leads recientes */}
       <section>
         <SectionHeader num="C" title="Leads recientes" />
-        {leads.length === 0 ? (
-          <p className="font-mono text-[12px] text-neutral-500">Sin leads para mostrar.</p>
+        <input
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setPagina(0);
+          }}
+          placeholder="Buscar por nombre o ID…"
+          className="mb-6 w-full max-w-sm border-b border-neutral-700 bg-transparent pb-2 font-mono text-[13px] text-neutral-100 placeholder-neutral-600 outline-none transition focus:border-amber-400"
+        />
+        {leadsFiltrados.length === 0 ? (
+          <p className="font-mono text-[12px] text-neutral-500">
+            {busqueda ? "Sin resultados para esa búsqueda." : "Sin leads para mostrar."}
+          </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-neutral-700 font-mono text-[10px] tracking-[0.15em] text-neutral-500 uppercase">
-                  <th className="py-3 pr-4 font-normal">Lead</th>
-                  <th className="py-3 pr-4 font-normal">Nombre</th>
-                  <th className="py-3 pr-4 font-normal">Servicio</th>
-                  <th className="py-3 pr-4 font-normal">Estado</th>
-                  <th className="py-3 pr-4 font-normal">Tier</th>
-                  <th className="py-3 pr-4 text-right font-normal">Presupuesto</th>
-                  <th className="py-3 text-right font-normal">Ingreso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => (
-                  <tr key={lead.lead_id} className="border-b border-neutral-900 text-neutral-300">
-                    <td className="py-3 pr-4 font-mono text-[12px] text-neutral-500">
-                      {lead.lead_id}
-                    </td>
-                    <td className="py-3 pr-4 text-neutral-100">{lead.nombre}</td>
-                    <td className="py-3 pr-4">{lead.servicio?.replace(/_/g, " ")}</td>
-                    <td className="py-3 pr-4">
-                      <Tag className="text-neutral-400">{lead.estado?.replace(/_/g, " ")}</Tag>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <Tag className={lead.tier ? TIER_COLOR[lead.tier] : "text-neutral-700"}>
-                        {lead.tier ?? "—"}
-                      </Tag>
-                    </td>
-                    <td className="py-3 pr-4 text-right font-mono">
-                      {formatMoney(lead.presupuesto)}
-                    </td>
-                    <td className="py-3 text-right font-mono text-neutral-500">
-                      {formatDate(lead.fecha_ingreso)}
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-neutral-700 font-mono text-[10px] tracking-[0.15em] text-neutral-500 uppercase">
+                    <th className="py-3 pr-4 font-normal">Lead</th>
+                    <th className="py-3 pr-4 font-normal">Nombre</th>
+                    <th className="py-3 pr-4 font-normal">Servicio</th>
+                    <th className="py-3 pr-4 font-normal">Estado</th>
+                    <th className="py-3 pr-4 font-normal">Tier</th>
+                    <th className="py-3 pr-4 text-right font-normal">Presupuesto</th>
+                    <th className="py-3 text-right font-normal">Ingreso</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {leadsPagina.map((lead) => (
+                    <tr key={lead.lead_id} className="border-b border-neutral-900 text-neutral-300">
+                      <td className="py-3 pr-4 font-mono text-[12px] text-neutral-500">
+                        {lead.lead_id}
+                      </td>
+                      <td className="py-3 pr-4 text-neutral-100">{lead.nombre}</td>
+                      <td className="py-3 pr-4">{lead.servicio?.replace(/_/g, " ")}</td>
+                      <td className="py-3 pr-4">
+                        <Tag className="text-neutral-400">{lead.estado?.replace(/_/g, " ")}</Tag>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <Tag className={lead.tier ? TIER_COLOR[lead.tier] : "text-neutral-700"}>
+                          {lead.tier ?? "—"}
+                        </Tag>
+                      </td>
+                      <td className="py-3 pr-4 text-right font-mono">
+                        {formatMoney(lead.presupuesto)}
+                      </td>
+                      <td className="py-3 text-right font-mono text-neutral-500">
+                        {formatDate(lead.fecha_ingreso)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalPaginas > 1 && (
+              <div className="mt-6 flex items-center justify-between font-mono text-[11px] tracking-[0.15em] text-neutral-500 uppercase">
+                <button
+                  type="button"
+                  onClick={() => setPagina((p) => Math.max(0, p - 1))}
+                  disabled={pag === 0}
+                  className="px-3 py-1 transition hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  ← Anterior
+                </button>
+                <span className="text-neutral-400">
+                  Página {pag + 1} de {totalPaginas} · {leadsFiltrados.length} leads
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPagina((p) => Math.min(totalPaginas - 1, p + 1))}
+                  disabled={pag >= totalPaginas - 1}
+                  className="px-3 py-1 transition hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 
